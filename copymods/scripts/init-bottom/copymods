@@ -63,7 +63,7 @@ mount -t tmpfs copymods "$rootmnt/lib/modules" ||
 mv "/lib/modules/$myver" "$rootmnt/lib/modules" ||
 	{ log_failure_msg "failed to copy modules to target root"; exit 0; }
 
-ln -s "$rootmnt/lib/modules" "/lib/modules/$myver" ||
+ln -s "$rootmnt/lib/modules/$myver" "/lib/modules/$myver" ||
 	{ log_failure_msg "failed to link to modules"; exit 0; }
 
 # vi: ts=4 noexpandtab
