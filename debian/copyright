@@ -1,8 +1,22 @@
-Format: http://dep.debian.net/deps/dep5
+Format: http://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
 Upstream-Name: cloud-initramfs-tools
 
 Files: *
 Copyright: 2011 Scott Moser <scott.moser@canonical.com>
+License: GPL-3.0+
+
+Files: debian/* overlayroot/scripts/init-bottom/overlayroot
+Copyright: 2011 Scott Moser <smoser@ubuntu.com>
+License: GPL-3.0+
+
+Files: debian/*overlayroot* overlayroot/*
+Copyright: 2012 Dustin Kirkland <kirkland@ubuntu.com>
+License: GPL-3.0+
+
+Files: overlayroot/scripts/init-bottom/overlayroot
+Copyright: 2012 Axel Heider
+License: GPL-3.0+
+
 License: GPL-3.0+
  This program is free software: you can redistribute it and/or modify
  it under the terms of the GNU General Public License as published by
@@ -20,14 +34,3 @@ License: GPL-3.0+
  On Debian systems, the complete text of the GNU General
  Public License version 3 can be found in "/usr/share/common-licenses/GPL-3".
 
-Files: debian/* overlayroot/scripts/init-bottom/overlayroot
-Copyright: 2011 Scott Moser <smoser@ubuntu.com>
-License: GPL-3.0+
-
-Files: debian/*overlayroot* overlayroot/*
-Copyright: 2012 Dustin Kirkland <kirkland@ubuntu.com>
-License: GPL-3.0+
-
-Files: overlayroot/scripts/init-bottom/overlayroot
-Copyright: 2012 Axel Heider
-License: GPL-3.0+
