@@ -1,3 +1,15 @@
+cloud-initramfs-tools (0.42ubuntu1) UNRELEASED; urgency=medium
+
+  * debian/control: fix lintian warnings
+    ancient-standards-version (3.9.3 -> 4.1.5),
+    spelling-error-in-description,
+    priority-extra-is-replaced-by-priority-optional
+  * debian/copyright: fix lintian missing-license-paragraph-in-dep5-copyright
+  * debian/compat fix lintian
+    package-uses-deprecated-debhelper-compat-version (7 -> 11)
+
+ -- Scott Moser <smoser@ubuntu.com>  Tue, 10 Jul 2018 10:11:52 -0400
+
 cloud-initramfs-tools (0.41ubuntu1) cosmic; urgency=medium
 
   * growroot: copy_exec from wherever they were in path. Closes #852569.
