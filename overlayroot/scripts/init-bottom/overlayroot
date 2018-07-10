@@ -306,7 +306,7 @@ overlayrootify_fstab() {
 	local input="$1" root_ro="${2:-/media/root-ro}"
 	local root_rw="${3:-/media/root-rw}" dir_prefix="${4:-/}"
 	local recurse=${5:-1} swap=${6:-0} fstype=${7:-overlayfs}
-	local hash="#" oline="" ospec="" upper="" dirs="" copy_opts=""
+	local hash="#" oline="" ospec="" upper="" dirs="" copy_opts="" copy_opt=""
 	local spec file vfstype opts pass freq line ro_line
 	local workdir="" use_orig="" relfile="" needs_workdir=false noauto=""
 	
@@ -355,8 +355,13 @@ overlayrootify_fstab() {
 		else
 			ospec="${root_ro}${file}"
 			copy_opts=""
-			[ "${opts#*nobootwait*}" != "${opts}" ] &&
-				copy_opts=",nobootwait"
+			for copy_opt in nobootwait noauto; do
+				case ",$opts," in
+					*,${copy_opt},*)
+						copy_opts="${copy_opts},${copy_opt}";;
+				esac
+			done
+
 			clean_path "${root_rw}/${dir_prefix}${file}"
 			upper="$_RET"
 
