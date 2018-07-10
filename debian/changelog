@@ -1,8 +1,10 @@
 cloud-initramfs-tools (0.41ubuntu1) UNRELEASED; urgency=medium
 
   * growroot: copy_exec from wherever they were in path. Closes #852569.
+  * overlayroot: Make overlay mount 'noauto' if backing mount is 'noauto'.
+    (LP: #1779279)
 
- -- Scott Moser <smoser@ubuntu.com>  Fri, 27 Oct 2017 09:57:24 -0400
+ -- Scott Moser <smoser@ubuntu.com>  Tue, 10 Jul 2018 09:14:09 -0400
 
 cloud-initramfs-tools (0.40ubuntu1) bionic; urgency=medium
 
