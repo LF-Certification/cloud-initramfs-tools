@@ -331,7 +331,7 @@ overlayrootify_fstab() {
 		else
 			case "$vfstype" in
 				vfat|fat) use_orig="fs-unsupported";;
-				proc|sys|tmpfs|dev|udev) use_orig="fs-virtual";;
+				proc|sys|tmpfs|dev|udev|debugfs) use_orig="fs-virtual";;
 			esac
 		fi
 
