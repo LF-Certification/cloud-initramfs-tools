@@ -34,7 +34,7 @@ cmdline=""
 myopts=""
 if [ -f /proc/cmdline ]; then
 	read cmdline < /proc/cmdline
-	for tok in cmdline; do
+	for tok in $cmdline; do
 		[ "${tok#copymods=}" != "$tok" ] || continue
 		myopts="${tok#copymods=}"
 	done
