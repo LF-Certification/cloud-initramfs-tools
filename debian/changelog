@@ -1,7 +1,9 @@
 cloud-initramfs-tools (0.43ubuntu2) UNRELEASED; urgency=medium
 
+  [ Dann Frazier ]
   * copymods: Fix usage of modules in initramfs after copymods script.
-    [Dann Frazier] (LP: #1766723)
+    (LP: #1766723)
+  * copymods: Fix typo parsing copymods= parameters in /proc/cmdline.
 
  -- Scott Moser <smoser@ubuntu.com>  Wed, 07 Nov 2018 09:41:13 -0500
 
