@@ -1,9 +1,9 @@
-cloud-initramfs-tools (0.45ubuntu1) UNRELEASED; urgency=medium
+cloud-initramfs-tools (0.45ubuntu1) focal; urgency=medium
 
   * Add dependency on flock for growroot's use of growpart.
     (LP: #1834875)
 
- -- Scott Moser <smoser@ubuntu.com>  Mon, 24 Feb 2020 20:22:30 -0500
+ -- Scott Moser <smoser@ubuntu.com>  Tue, 25 Feb 2020 13:08:22 -0500
 
 cloud-initramfs-tools (0.44ubuntu1) disco; urgency=medium
 
