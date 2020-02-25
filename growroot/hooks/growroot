@@ -9,7 +9,7 @@ esac
 . /usr/share/initramfs-tools/hook-functions
 
 ##
-for pname in sfdisk growpart udevadm; do
+for pname in sfdisk growpart udevadm flock; do
     fpath=$(which "$pname") && copy_exec "$fpath" ||
         { echo "ERROR: no '$pname' in path" 1>&2; exit 1; }
 done
