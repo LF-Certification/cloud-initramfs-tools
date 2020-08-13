@@ -299,6 +299,32 @@ get_workdir() {
 	clean_path "${root_rw}/${dir_prefix%/}-workdir/${file}"
 }
 
+gen_fstab() {
+	# gen_fstab(mp) - generate a fabricated /etc/fstab for mount point $mp
+	local mp="$1" m_spec="" m_opts="" m_fstype=""
+	local spec file vfstype opts pass freq
+
+	# just remove any trailing /
+	[ "$mp" != "/" ] && mp=${mp%/}
+	while read spec file vfstype opts pass freq; do
+		[ "$file" = "$mp" ] && {
+			m_spec="$spec"
+			m_opts="$opts"
+			m_fstype="$vfstype"
+			break
+		}
+	done </proc/mounts
+	[ -z "$m_spec" ] && {
+		log_warn "did not find root mount point $mp in /proc/mounts"
+		m_opts="/dev/root"
+		m_opts="defaults"
+		m_fstype="auto"
+	}
+
+	echo "# fabricated by overlayroot, rootfs did not contain /etc/fstab"
+	echo "${m_spec} / ${m_fstype} ${m_opts} 0 0 "
+}
+
 overlayrootify_fstab() {
 	# overlayrootify_fstab(input, root_ro, root_rw, dir_prefix, recurse, swap)
 	# read input fstab file, write an overlayroot version to stdout
@@ -311,6 +337,18 @@ overlayrootify_fstab() {
 	local workdir="" use_orig="" relfile="" needs_workdir=false noauto=""
 	
 	[ -f "$input" ] || return 1
+
+    cat <<EOF
+#
+#  This fstab is for overlayroot. The real one can be found at
+#  ${root_ro}/etc/fstab
+#  The original entry for '/' and other mounts have been updated to be placed
+#  under $root_ro.
+#  To permanently modify this (or any other file), you should change-root into
+#  a writable view of the underlying filesystem using:
+#      sudo overlayroot-chroot
+#
+EOF
 
 	needs_workdir && needs_workdir=true || needs_workdir=false
 	while read spec file vfstype opts pass freq; do
@@ -660,6 +698,10 @@ OVERLAYROOT_DEBUG=${_RET_common_debug:-${OVERLAYROOT_DEBUG}}
 dir_prefix=${_RET_common_dir:-"/overlay"}
 overlayroot_driver=${_RET_common_driver}
 
+read cmdline </proc/cmdline
+cmdline=" $cmdline "
+[ "${cmdline#* ro }" != "$cmdline" ] && cmdline_ro=true || cmdline_ro=false
+
 if [ "${overlayroot_driver:-auto}" = "auto" ]; then
 	search_fs_driver overlay overlayfs ||
 		fail "Unable to find a driver. searched: overlay overlayfs"
@@ -791,23 +833,23 @@ mount --move "${root_rw}" "${ROOTMNT}${root_rw}" ||
 # Remember we are still on the initramfs root fs here, so we have to work
 # on ${ROOTMNT}/etc/fstab. The original fstab is
 # ${ROOTMNT}${root_ro}/etc/fstab.
-cat <<EOF >${ROOTMNT}/etc/fstab
-#
-#  This fstab is in an ${overlayroot_driver}. The real one can be found at
-#  ${root_ro}/etc/fstab
-#  The original entry for '/' and other mounts have been updated to be placed
-#  under $root_ro.
-#  To permanently modify this (or any other file), you should change-root into
-#  a writable view of the underlying filesystem using:
-#      sudo overlayroot-chroot
-#
-EOF
+source_fstab="$ROOTMNT/${root_ro}/etc/fstab"
+if [ ! -f "$source_fstab" ] && [ "$cmdline_ro" = "true" ]; then
+	debug "rootfs did not contain /etc/fstab, creating" \
+		"based on kernel cmdline"
+	source_fstab="${TEMP_D}/fstab"
+	gen_fstab "${ROOTMNT}${root_ro}" > "$source_fstab" ||
+		log_fail "gen_fstab failed for $ROOTMNT/$root_ro"
+fi
 
-[ $? -eq 0 ] || log_fail "failed to modify /etc/fstab (step 1)"
-overlayrootify_fstab "${ROOTMNT}${root_ro}/etc/fstab" "$root_ro" \
-	"$root_rw" "$dir_prefix" "$recurse" "$swap" "${overlayroot_driver}" \
-	>> "${ROOTMNT}/etc/fstab" ||
-	log_fail "failed to modify /etc/fstab (step 2)"
+if [ -f "$source_fstab" ]; then
+	overlayrootify_fstab "$source_fstab" "$root_ro" \
+		"$root_rw" "$dir_prefix" "$recurse" "$swap" "${overlayroot_driver}" \
+		>> "${ROOTMNT}/etc/fstab" ||
+		log_fail "failed to modify /etc/fstab"
+else
+	debug "rootfs did not contain /etc/fstab."
+fi
 
 # we have to make the directories in ${root_rw} because if they do not
 # exist, then the 'upper=' argument to overlayfs will fail.
@@ -822,9 +864,7 @@ fi
 
 # if / is supposed to be mounted read-only (cmdline with 'ro')
 # then mount our overlayfs as read-only just to be more normal
-read cmdline < /proc/cmdline
-cmdline=" $cmdline "
-if [ "${cmdline#* ro }" != "$cmdline" ]; then
+if [ "${cmdline_ro}" = "true" ]; then
 	mount -o remount,ro "$ROOTMNT" ||
 		log_fail "failed to remount overlayroot read-only"
 	debug "mounted $ROOTMNT read-only per kernel cmdline"
