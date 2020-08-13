@@ -1,9 +1,9 @@
-cloud-initramfs-tools (0.46ubuntu1) UNRELEASED; urgency=medium
+cloud-initramfs-tools (0.46ubuntu1) groovy; urgency=medium
 
   * overlayroot: initialize /etc/fstab if root does not have one and
     read-only [Scott Moser] (LP: #1890803)
 
- -- Scott Moser <smoser@ubuntu.com>  Thu, 13 Aug 2020 16:46:29 -0400
+ -- Scott Moser <smoser@ubuntu.com>  Thu, 13 Aug 2020 16:47:40 -0400
 
 cloud-initramfs-tools (0.45ubuntu1) focal; urgency=medium
 
