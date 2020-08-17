@@ -1,9 +1,9 @@
-cloud-initramfs-tools (0.47ubuntu1) UNRELEASED; urgency=medium
+cloud-initramfs-tools (0.47ubuntu1) groovy; urgency=medium
 
   [ Ryan Harper ]
   * overlayroot: overwrite existing fstab when overlayrootifying fstab
 
- -- Scott Moser <smoser@ubuntu.com>  Mon, 17 Aug 2020 12:00:02 -0400
+ -- Scott Moser <smoser@ubuntu.com>  Mon, 17 Aug 2020 12:00:58 -0400
 
 cloud-initramfs-tools (0.46ubuntu1) groovy; urgency=medium
 
