@@ -35,7 +35,7 @@ Description: automatically resize the root partition on first boot
  .
  You most likely do not want this package unless you know what you are
  doing.  It is primarily interesting in a virtualized environment when
- a disk can provisioned with a size larger than its original size.
+ a disk can be provisioned with a size larger than its original size.
  In this case, with this package installed, you can automatically use
  the new space without requiring a reboot to re-read the partition table.
 
