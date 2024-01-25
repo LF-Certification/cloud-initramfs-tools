@@ -393,7 +393,7 @@ EOF
 		else
 			ospec="${root_ro}${file}"
 			copy_opts=""
-			for copy_opt in nobootwait noauto; do
+			for copy_opt in nobootwait noauto nofail; do
 				case ",$opts," in
 					*,${copy_opt},*)
 						copy_opts="${copy_opts},${copy_opt}";;
