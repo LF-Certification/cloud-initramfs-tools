@@ -1,3 +1,27 @@
+cloud-initramfs-tools (0.48) noble; urgency=medium
+
+  [ Brian Murray ]
+  * debian/control Fix a typo.
+
+  [ grozzly ]
+  * overlayroot: add 'nofail' to the list of inherited mount options
+    (LP: #2049271)
+
+  [ Paride Legovini ]
+  * d/copyright: fix duplicate globbing pattern
+  * d/copyright: use secure (https) Format URI
+  * d/copyright: trim trailing whitespaces
+  * d/control: specify Rules-Requires-Root: no
+  * d/control: switch to dh compat level 13 via debhelper-compat.
+    No changes needed.
+  * d/copyright: coalesce identically licensed debian/ stanzas
+  * d/copyright: add Canonical Ltd. to the debian/* stanza
+  * d/control: bump Standards-Version to 4.6.2 (no changes needed)
+  * d/cloud-initramfs-copymods.l-o: override empty directory warning.
+    The empty directory is created on purpose.
+
+ -- Paride Legovini <paride@ubuntu.com>  Fri, 26 Jan 2024 11:49:48 +0100
+
 cloud-initramfs-tools (0.47ubuntu1) groovy; urgency=medium
 
   [ Ryan Harper ]
