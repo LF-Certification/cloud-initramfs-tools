@@ -2,7 +2,7 @@ Source: cloud-initramfs-tools
 Section: admin
 Priority: optional
 Maintainer: Scott Moser <smoser@ubuntu.com>
-Build-Depends: debhelper (>= 11)
+Build-Depends: debhelper-compat (= 13)
 Standards-Version: 4.1.5
 Homepage: http://launchpad.net/cloud-initramfs-tools
 Vcs-Git: https://git.launchpad.net/cloud-initramfs-tools
