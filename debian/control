@@ -3,7 +3,7 @@ Section: admin
 Priority: optional
 Maintainer: Scott Moser <smoser@ubuntu.com>
 Build-Depends: debhelper-compat (= 13)
-Standards-Version: 4.1.5
+Standards-Version: 4.6.2
 Homepage: http://launchpad.net/cloud-initramfs-tools
 Vcs-Git: https://git.launchpad.net/cloud-initramfs-tools
 Rules-Requires-Root: no
