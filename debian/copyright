@@ -6,17 +6,9 @@ Copyright: 2011 Scott Moser <scott.moser@canonical.com>
 License: GPL-3.0+
 
 Files: debian/*
-Copyright: 2011 Scott Moser <smoser@ubuntu.com>
-License: GPL-3.0+
-
-Files: debian/*overlayroot* overlayroot/*
-Copyright: 2012 Dustin Kirkland <kirkland@ubuntu.com>
-License: GPL-3.0+
-
-Files:
- overlayroot/scripts/init-bottom/overlayroot
 Copyright:
  2011 Scott Moser <smoser@ubuntu.com>
+ 2012 Dustin Kirkland <kirkland@ubuntu.com>
  2012 Axel Heider
 License: GPL-3.0+
 
@@ -36,4 +28,3 @@ License: GPL-3.0+
  .
  On Debian systems, the complete text of the GNU General
  Public License version 3 can be found in "/usr/share/common-licenses/GPL-3".
-
