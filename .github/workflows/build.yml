@@ -13,7 +13,10 @@ jobs:
       - name: Install development tools
         run: |-
           sudo apt update
-          sudo apt install devscripts dpkg-dev build-essential fakeroot
+          sudo apt install -y devscripts dpkg-dev build-essential fakeroot
+      - name: Install build dependencies
+        run: |-
+          sudo apt install -y debhelper-compat
       - name: Build packages
         run: |-
           debuild -b -us -uc
