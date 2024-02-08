@@ -780,7 +780,7 @@ mount --move "${ROOTMNT}" "${root_ro}" ||
 # "panic". Otherwise the boot process is very likely to fail with even more
 # errors and leave the system in a wired state.
 
-# mount virtual fs ${ROOTMNT} with rw-fs ${root_rw} on top or ro-fs ${root_ro}.
+# mount virtual fs ${ROOTMNT} with rw-fs ${root_rw} on top of ro-fs ${root_ro}.
 debug mount -t "$mount_type" $mount_opts
 mount -t "$mount_type" $mount_opts
 if [ $? -ne 0 ]; then
