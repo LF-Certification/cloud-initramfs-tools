@@ -14,9 +14,6 @@ jobs:
         run: |-
           sudo apt update
           sudo apt install devscripts dpkg-dev build-essential fakeroot
-      - name: Install build dependencies
-        run: |-
-          sudo apt build-dep cloud-initramfs-tools
       - name: Build packages
         run: |-
           debuild -b -us -uc
