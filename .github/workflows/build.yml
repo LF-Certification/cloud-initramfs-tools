@@ -1,0 +1,34 @@
+name: build
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Install development tools
+        run: |-
+          sudo apt update
+          sudo apt install -y devscripts dpkg-dev build-essential fakeroot
+      - name: Install build dependencies
+        run: |-
+          sudo apt install -y debhelper-compat
+      - name: Build packages
+        run: |-
+          debuild -b -us -uc
+      - name: Get tag
+        id: get_tag
+        run: |
+          echo "tag=${GITHUB_REF#refs/*/}" >> $GITHUB_OUTPUT
+          echo "version=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+      - name: Create release and upload package
+        uses: ncipollo/release-action@v1
+        with:
+          artifacts: ../overlayroot_*_all.deb
+          body: "Release ${{ steps.get_tag.outputs.version }}"
+          tag: ${{ steps.get_tag.outputs.tag }}
+          token: ${{ secrets.GITHUB_TOKEN }}
