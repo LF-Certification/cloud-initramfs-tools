@@ -713,7 +713,7 @@ overlayroot_driver=${_RET_common_driver}
 
 read cmdline </proc/cmdline
 cmdline=" $cmdline "
-if ([ "${cmdline#* ro }" != "$cmdline" ] && [ "${cmdline#* ro }" != *rw* ]) && cmdline_ro=true || \
+([ "${cmdline#* ro }" != "$cmdline" ] && [ "${cmdline#* ro }" != *rw* ]) && cmdline_ro=true || \
 	cmdline_ro=false
 
 if [ "${overlayroot_driver:-auto}" = "auto" ]; then
