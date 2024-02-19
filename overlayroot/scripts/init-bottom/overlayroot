@@ -711,10 +711,14 @@ OVERLAYROOT_DEBUG=${_RET_common_debug:-${OVERLAYROOT_DEBUG}}
 dir_prefix=${_RET_common_dir:-"/overlay"}
 overlayroot_driver=${_RET_common_driver}
 
+cmdline_ro=false
 read cmdline </proc/cmdline
-cmdline=" $cmdline "
-([ "${cmdline#* ro }" != "$cmdline" ] && [ "${cmdline#* ro }" != *rw* ]) && cmdline_ro=true || \
-	cmdline_ro=false
+for param in $cmdline; do
+	case "$param" in
+		ro) cmdline_ro=true ;;
+		rw) cmdline_ro=false ;;
+	esac
+done
 
 if [ "${overlayroot_driver:-auto}" = "auto" ]; then
 	search_fs_driver overlay overlayfs ||
