@@ -673,7 +673,7 @@ case "${overlayroot:-disabled}" in
 			*) opts="${overlayroot#device:}";;
 		esac
 
-		devices="$(echo -n "$opts" | grep -Eo 'dev=([^,]*)' | cut -d= -f2 | tr ":" "\n" | tac)"
+		devices="$(echo "$opts" | grep -Eo 'dev=([^,]*)' | cut -d= -f2 | tr ":" "\n" | sed '1!G;h;$!d')"
 
 		for device in $devices; do
 			dopts=$(echo "$opts" | sed "s,dev=[^,]*,dev=${device},")
