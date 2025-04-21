@@ -2,6 +2,7 @@
 #  Copyright, 2012 Dustin Kirkland <kirkland@ubuntu.com>
 #  Copyright, 2012 Scott Moser <smoser@ubuntu.com>
 #  Copyright, 2012 Axel Heider
+#  Copyright, 2024 Daniel Ruthardt <druthardt@linuxfoundation.org>
 #
 #  Based on scripts from
 #    Sebastian P.
@@ -335,7 +336,7 @@ overlayrootify_fstab() {
 	local hash="#" oline="" ospec="" upper="" dirs="" copy_opts="" copy_opt=""
 	local spec file vfstype opts pass freq line ro_line
 	local workdir="" use_orig="" relfile="" needs_workdir=false noauto=""
-	
+
 	[ -f "$input" ] || return 1
 
     cat <<EOF
@@ -671,17 +672,29 @@ case "${overlayroot:-disabled}" in
 			/dev/*) opts="dev=${overlayroot}";;
 			*) opts="${overlayroot#device:}";;
 		esac
-		dev_setup "${opts}" ||
-			fail "failed setup overlay for ${overlayroot} [$opts]${cfgmsg}"
+
+		devices="$(echo "$opts" | grep -Eo 'dev=([^,]*)' | cut -d= -f2 | tr ":" "\n" | sed '1!G;h;$!d')"
+
+		for device in $devices; do
+			dopts=$(echo "$opts" | sed "s,dev=[^,]*,dev=${device},")
+
+			dev_setup "$dopts" ||
+				fail "failed setup overlay for ${overlayroot} [${dopts}]${cfgmsg}"
+		done
 		mode="device"
-		device="$_RET_DEVICE"
+
+		mountpoints=""
+		i=1; for device in $(echo "$devices" | sed '$d'); do
+			mountpoints="${mountpoints:+${mountpoints}
+}/media/root-ro-${i}"
+		i=$((i+1)); done
 		;;
 	crypt:*)
 		mode="crypt"
 		opts=${overlayroot#crypt:}
 		crypto_setup "${opts}" ||
 			fail "failed setup crypt for ${overlayroot}${cfgmsg}"
-		device="$_RET_DEVICE"
+		devices="$_RET_DEVICE"
 		;;
 	disabled)
 		debug "overlayroot disabled${cfgmsg}"
@@ -698,9 +711,14 @@ OVERLAYROOT_DEBUG=${_RET_common_debug:-${OVERLAYROOT_DEBUG}}
 dir_prefix=${_RET_common_dir:-"/overlay"}
 overlayroot_driver=${_RET_common_driver}
 
+cmdline_ro=false
 read cmdline </proc/cmdline
-cmdline=" $cmdline "
-[ "${cmdline#* ro }" != "$cmdline" ] && cmdline_ro=true || cmdline_ro=false
+for param in $cmdline; do
+	case "$param" in
+		ro) cmdline_ro=true ;;
+		rw) cmdline_ro=false ;;
+	esac
+done
 
 if [ "${overlayroot_driver:-auto}" = "auto" ]; then
 	search_fs_driver overlay overlayfs ||
@@ -713,12 +731,55 @@ else
 fi
 
 debug "swap=$swap recurse=$recurse debug=$OVERLAYROOT_DEBUG dir=$dir_prefix"
-debug "device=$device mode=$mode driver=${overlayroot_driver}"
+debug "devices=$(echo -n "$devices" | tr "\n" ",") mode=$mode driver=${overlayroot_driver}"
 
 [ "$swap" = "0" -o "$swap" = "1" ] ||
 	fail "invalid setting for swap: $swap. must be '0' or '1'"
 [ "$recurse" = "0" -o "$recurse" = "1" ] ||
 	fail "invalid setting for recurse: $recurse. must be '0' or '1'"
+
+# make the mount point on the init root fs ${root_rw}
+mkdir -p "${root_rw}" ||
+	fail "failed to create ${root_rw}"
+
+# make the mount point on the init root fs ${root_ro}
+mkdir -p "${root_ro}" ||
+	fail "failed to create ${root_ro}"
+for mountpoint in $mountpoints; do
+	mkdir -p "$mountpoint" ||
+		fail "failed to create ${mountpoint}"
+done
+
+# mount the backing device to $root_rw
+if [ "$mode" = "tmpfs" ]; then
+	# mount a tmpfs using the device name tmpfs-root
+	mount -t tmpfs tmpfs-root "${root_rw}" ||
+		fail "failed to create tmpfs"
+else
+	# dev or crypto
+	device=$(echo "$devices" | tail -n1)
+	mount "$device" "$root_rw" ||
+		fail "failed mount backing device ${device}"
+fi
+
+mkdir -p "${root_rw}/${dir_prefix}" ||
+	fail "failed to create ${dir_prefix} on ${device}"
+
+i=1; for device in $(echo "$devices" | head -n -1); do
+	mountpoint=$(echo "$mountpoints" | head -n$i | tail -n1)
+	# mount the backing device
+	mount "$device" "$mountpoint" ||
+			fail "failed mount backing device ${device}"
+i=$((i+1)); done
+
+# root is mounted on ${ROOTMNT}, move it to ${ROOT_RO}.
+mount --move "${ROOTMNT}" "${root_ro}" ||
+	fail "failed to move root away from ${ROOTMNT} to ${root_ro}"
+
+# there is nothing left at ${ROOTMNT} now. So for any error we get we should
+# either do recovery to restore ${ROOTMNT} for drop to a initramfs shell using
+# "panic". Otherwise the boot process is very likely to fail with even more
+# errors and leave the system in a wired state.
 
 log_warn "configuring overlayroot with driver=${overlayroot_driver} mode=$mode opts='$opts' per $used_desc"
 
@@ -727,11 +788,23 @@ workdir=""
 case "${overlayroot_driver}" in
 	overlayfs|overlay)
 		mount_type="${overlayroot_driver}"
-		mount_opts="-o lowerdir=${root_ro},upperdir=${root_rw}/${dir_prefix}"
+    lowerdirs="$root_ro"
+    for mountpoint in $mountpoints; do
+      if [ -d "${mountpoint}${dir_prefix}" ]; then
+        lowerdir="${mountpoint}${dir_prefix}"
+      else
+        lowerdir="$mountpoint"
+      fi
+      lowerdirs="${lowerdir}:${lowerdirs}"
+    done
+		mount_opts="-o lowerdir=${lowerdirs},upperdir=${root_rw}/${dir_prefix}"
 		if needs_workdir; then
 			get_workdir "$root_rw" "$dir_prefix" "/"
 			workdir="$_RET"
 			mount_opts="${mount_opts},workdir=$workdir"
+
+			[ -z "$workdir" ] || mkdir -p "$workdir" ||
+				fail "failed to create workdir '${workdir}' on ${device}"
 		fi
 		clean_path "${mount_opts} overlayroot ${ROOTMNT}"
 		mount_opts="$_RET"
@@ -746,41 +819,7 @@ case "${overlayroot_driver}" in
 		;;
 esac
 
-# make the mount point on the init root fs ${root_rw}
-mkdir -p "${root_rw}" ||
-	fail "failed to create ${root_rw}"
-
-# make the mount point on the init root fs ${root_ro}
-mkdir -p "${root_ro}" ||
-	fail "failed to create ${root_ro}"
-
-# mount the backing device to $root_rw
-if [ "$mode" = "tmpfs" ]; then
-	# mount a tmpfs using the device name tmpfs-root
-	mount -t tmpfs tmpfs-root "${root_rw}" ||
-		fail "failed to create tmpfs"
-else
-	# dev or crypto
-	mount "$device" "${root_rw}" ||
-		fail "failed mount backing device $device"
-fi
-
-mkdir -p "${root_rw}/${dir_prefix}" ||
-	fail "failed to create ${dir_prefix} on ${device}"
-
-[ -z "$workdir" ] || mkdir -p "$workdir" ||
-	fail "failed to create workdir '$workdir' on ${device}"
-
-# root is mounted on ${ROOTMNT}, move it to ${ROOT_RO}.
-mount --move "${ROOTMNT}" "${root_ro}" ||
-	fail "failed to move root away from ${ROOTMNT} to ${root_ro}"
-
-# there is nothing left at ${ROOTMNT} now. So for any error we get we should
-# either do recovery to restore ${ROOTMNT} for drop to a initramfs shell using
-# "panic". Otherwise the boot process is very likely to fail with even more
-# errors and leave the system in a wired state.
-
-# mount virtual fs ${ROOTMNT} with rw-fs ${root_rw} on top or ro-fs ${root_ro}.
+# mount virtual fs ${ROOTMNT} with rw-fs ${root_rw} on top of ro-fs ${root_ro}.
 debug mount -t "$mount_type" $mount_opts
 mount -t "$mount_type" $mount_opts
 if [ $? -ne 0 ]; then
@@ -810,6 +849,11 @@ fi
 mkdir -p "${ROOTMNT}/${root_ro}"
 mount --move ${root_ro} "${ROOTMNT}${root_ro}" ||
 	fail "failed to move ${root_ro} to ${ROOTMNT}${root_ro}"
+for mountpoint in $mountpoints; do
+	mkdir -p "${ROOTMNT}${mountpoint}"
+	mount --move "$mountpoint" "${ROOTMNT}${mountpoint}" ||
+		fail "failed to move ${mountpoint} to ${ROOTMNT}${mountpoint}"
+done
 
 # move mount from ${root_rw} to ${ROOTMNT}${root_rw}
 [ -d ${ROOTMNT}${root_rw} ] || mkdir -p ${ROOTMNT}${root_rw}
